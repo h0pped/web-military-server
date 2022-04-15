@@ -1,4 +1,5 @@
 from select import KQ_NOTE_LOWAT
+from unicodedata import category
 from xmlrpc.client import ResponseError
 from django.shortcuts import render
 # import pyrebase
@@ -63,7 +64,12 @@ class CategoryView(APIView):
 
 class ItemView(APIView):
     def get(self, request, *args, **kwargs):
-        qs = Item.objects.all()
+        category_id = request.query_params.get('category_id')
+        if category_id is not None:
+            print(category_id)
+            qs = Item.objects.filter(category=category_id)
+        else:
+            qs = Item.objects.all()
         serializer = ItemSerializer(qs, many=True)
         return Response(serializer.data)
 
