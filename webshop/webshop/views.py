@@ -67,6 +67,13 @@ class ItemView(APIView):
         serializer = ItemSerializer(qs, many=True)
         return Response(serializer.data)
 
+    def post(self, request, *args, **kwargs):
+        serializer = ItemSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors)
+
     # else:
     #     qs = User.objects.filter(
     #         email=user_email, password=user_password).first

@@ -31,7 +31,6 @@ class CategoryField(serializers.PrimaryKeyRelatedField):
         queryset = self.get_queryset()
         if queryset is None:
             return {}
-
         return OrderedDict([(item.id, self.display_value(item)) for item in queryset])
 
 
