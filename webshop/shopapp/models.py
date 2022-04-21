@@ -27,3 +27,4 @@ class Item(models.Model):
     price = models.FloatField(default=0)
     photoPath = models.CharField(max_length=300)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    avg_rating = models.FloatField(default=0)

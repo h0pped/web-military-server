@@ -65,6 +65,17 @@ class CategoryView(APIView):
 class ItemView(APIView):
     def get(self, request, *args, **kwargs):
         category_id = request.query_params.get('category_id')
+        item_id = request.query_params.get('item_id')
+        print(item_id)
+
+        if item_id is not None:
+            qs = Item.objects.filter(id=item_id)
+            item = qs.first()
+            if item is not None:
+                serializer = ItemSerializer(item)
+                return Response(serializer.data)
+            else:
+                return Response({"error": "No such item"}, status=404)
         if category_id is not None:
             print(category_id)
             qs = Item.objects.filter(category=category_id)
