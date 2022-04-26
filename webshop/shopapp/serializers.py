@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from rest_framework import serializers
 
-from .models import User, Category, Item
+from .models import Order, User, Category, Item, Order_Item
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -41,3 +41,11 @@ class ItemSerializer(serializers.ModelSerializer):
         model = Item
         fields = ('id', 'title', 'description',
                   'price', 'photoPath', 'category', 'avg_rating')
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    item = ItemSerializer(many=False)
+
+    class Meta:
+        model = Order_Item
+        fields = ('id', 'order', 'item', 'price')

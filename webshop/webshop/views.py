@@ -7,8 +7,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 # from rest_framework.permissions import IsAuthenticated
 
-from shopapp.serializers import UserSerializer, CategorySerializer, ItemSerializer
-from shopapp.models import User, Category, Item
+from shopapp.serializers import UserSerializer, CategorySerializer, ItemSerializer, OrderItemSerializer
+from shopapp.models import User, Category, Item, Order_Item
 
 
 class UserView(APIView):
@@ -66,8 +66,6 @@ class ItemView(APIView):
     def get(self, request, *args, **kwargs):
         category_id = request.query_params.get('category_id')
         item_id = request.query_params.get('item_id')
-        print(item_id)
-
         if item_id is not None:
             qs = Item.objects.filter(id=item_id)
             item = qs.first()
@@ -91,15 +89,22 @@ class ItemView(APIView):
             return Response(serializer.data, status=201)
         return Response(serializer.errors)
 
-    # else:
-    #     qs = User.objects.filter(
-    #         email=user_email, password=user_password).first
-    #     serializer = UserSerializer(qs)
-    #     return Response(serializer.data)
 
-    # def post(self, request, *args, **kwargs):
-    #     serializer = UserSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data, status=201)
-    #     return Response(serializer.errors)
+class OrderItemView(APIView):
+    def get(self, request, *args, **kwargs):
+        qs = Order_Item.objects.all()
+        serializer = OrderItemSerializer(qs, many=True)
+        return Response(serializer.data, status=200)
+
+        # else:
+        #     qs = User.objects.filter(
+        #         email=user_email, password=user_password).first
+        #     serializer = UserSerializer(qs)
+        #     return Response(serializer.data)
+
+        # def post(self, request, *args, **kwargs):
+        #     serializer = UserSerializer(data=request.data)
+        #     if serializer.is_valid():
+        #         serializer.save()
+        #         return Response(serializer.data, status=201)
+        #     return Response(serializer.errors)
