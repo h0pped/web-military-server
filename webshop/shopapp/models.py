@@ -34,7 +34,7 @@ class Item(models.Model):
 
 class Order(models.Model):
     id = models.BigAutoField(primary_key=True)
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     address = models.CharField(max_length=150)
     country = models.CharField(max_length=100)
     remarks = models.CharField(max_length=200)

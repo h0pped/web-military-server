@@ -7,8 +7,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 # from rest_framework.permissions import IsAuthenticated
 
-from shopapp.serializers import UserSerializer, CategorySerializer, ItemSerializer, OrderItemSerializer
-from shopapp.models import User, Category, Item, Order_Item
+from shopapp.serializers import OrderSerializer, UserSerializer, CategorySerializer, ItemSerializer, OrderItemSerializer
+from shopapp.models import User, Category, Item, Order_Item, Order
 
 
 class UserView(APIView):
@@ -95,6 +95,23 @@ class OrderItemView(APIView):
         qs = Order_Item.objects.all()
         serializer = OrderItemSerializer(qs, many=True)
         return Response(serializer.data, status=200)
+
+
+class OrderView(APIView):
+    def get(self, request, *args, **kwargs):
+        order_id = request.query_params.get('order_id')
+        if order_id is not None:
+            qs = Order.objects.filter(id=order_id)
+            item = qs.first()
+            qs_order_items = Order_Item.objects.filter(order=order_id)
+            serializer = OrderSerializer(item)
+            order_items_serializer = OrderItemSerializer(
+                qs_order_items, many=True)
+        data = {
+            'order': serializer.data,
+            'order_items': order_items_serializer.data
+        }
+        return Response(data, status=200)
 
         # else:
         #     qs = User.objects.filter(
