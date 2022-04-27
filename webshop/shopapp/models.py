@@ -31,6 +31,9 @@ class Item(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     avg_rating = models.FloatField(default=0)
 
+    def __getitem__(self, key):
+        return getattr(self, key)
+
 
 class Order(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -49,3 +52,11 @@ class Order_Item(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     price = models.FloatField(default=0)
+
+
+class Review(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.FloatField(default=1)
+    comment = models.CharField(max_length=500)

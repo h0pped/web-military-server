@@ -7,8 +7,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 # from rest_framework.permissions import IsAuthenticated
 
-from shopapp.serializers import OrderSerializer, UserSerializer, CategorySerializer, ItemSerializer, OrderItemSerializer
-from shopapp.models import User, Category, Item, Order_Item, Order
+from shopapp.models import User, Category, Item, Order_Item, Order, Review
+from shopapp.serializers import OrderSerializer, UserSerializer, CategorySerializer, ItemSerializer, OrderItemSerializer, ReviewSerializer
 
 
 class UserView(APIView):
@@ -100,6 +100,7 @@ class OrderItemView(APIView):
 class OrderView(APIView):
     def get(self, request, *args, **kwargs):
         order_id = request.query_params.get('order_id')
+        user_id = request.query_params.get('user_id')
         if order_id is not None:
             qs = Order.objects.filter(id=order_id)
             item = qs.first()
@@ -107,21 +108,73 @@ class OrderView(APIView):
             serializer = OrderSerializer(item)
             order_items_serializer = OrderItemSerializer(
                 qs_order_items, many=True)
-        data = {
-            'order': serializer.data,
-            'order_items': order_items_serializer.data
-        }
-        return Response(data, status=200)
+            data = {
+                'order': serializer.data,
+                'order_items': order_items_serializer.data
+            }
+            return Response(data, status=200)
+        if user_id is not None:
+            user = User.objects.filter(id=user_id).first()
+            qs = Order.objects.filter(user=user)
+            orders = qs.all()
+            orders_serializer = OrderSerializer(orders, many=True)
+            for order in orders_serializer.data:
+                qs_order_items = Order_Item.objects.filter(order=order['id'])
+                order_items_serializer = OrderItemSerializer(
+                    qs_order_items, many=True)
+                order['order_items'] = order_items_serializer.data
+            return Response(orders_serializer.data, status=200)
+        if user_id is None and order_id is None:
+            qs = Order.objects.all()
+            orders = qs.all()
+            orders_serializer = OrderSerializer(orders, many=True)
+            for order in orders_serializer.data:
+                qs_order_items = Order_Item.objects.filter(order=order['id'])
+                order_items_serializer = OrderItemSerializer(
+                    qs_order_items, many=True)
+                order['order_items'] = order_items_serializer.data
+            return Response(orders_serializer.data, status=200)
 
-        # else:
-        #     qs = User.objects.filter(
-        #         email=user_email, password=user_password).first
-        #     serializer = UserSerializer(qs)
-        #     return Response(serializer.data)
+    def post(self, request, *args, **kwargs):
+        orderSerializer = OrderSerializer(data=request.data['order'])
+        if orderSerializer.is_valid():
+            order = orderSerializer.save()
+            for item in request.data['items']:
+                item['order'] = order.id
+                itemSerializer = OrderItemSerializer(data=item)
+                if itemSerializer.is_valid():
+                    itemSerializer.save()
+                    print(f'{item["item"]} was saved')
+                else:
+                    print(itemSerializer.errors)
+            return Response(request.data['order'], status=201)
+        print(orderSerializer.errors)
+        return Response(request.data['order'], status=500)
 
-        # def post(self, request, *args, **kwargs):
-        #     serializer = UserSerializer(data=request.data)
-        #     if serializer.is_valid():
-        #         serializer.save()
-        #         return Response(serializer.data, status=201)
-        #     return Response(serializer.errors)
+
+class ReviewView(APIView):
+    def get(self, request, *args, **kwargs):
+        item_id = request.query_params.get('item_id')
+        if item_id is not None:
+            qs = Review.objects.filter(item=item_id)
+            serializer = ReviewSerializer(qs, many=True)
+            return Response(serializer.data, status=200)
+        qs = Review.objects.all()
+        serializer = ReviewSerializer(qs, many=True)
+        return Response(serializer.data, status=200)
+
+    def post(self, request, *args, **kwargs):
+        serializer = ReviewSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            item = Item.objects.filter(id=request.data['item']).first()
+            item_reviews = Review.objects.filter(item=item)
+            item_reviews_serializer = ReviewSerializer(item_reviews, many=True)
+            rating_sum = 0
+            for review in item_reviews_serializer.data:
+                rating_sum += review['rating']
+            avg_rating = rating_sum / len(item_reviews_serializer.data)
+            item.__setattr__('avg_rating', avg_rating)
+            item.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors)
