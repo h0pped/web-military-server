@@ -37,7 +37,7 @@ class UserView(APIView):
                 user = qs.first()
                 if user is not None:
                     serializer = UserSerializer(user)
-                    return Response({"msg": "Succesfully authenticated!"}, status=200)
+                    return Response({"msg": "Succesfully authenticated!", "id": user.id}, status=200)
                 else:
                     return Response({"error": "No user with such credentials"}, status=404)
 
