@@ -40,7 +40,7 @@ class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     address = models.CharField(max_length=150)
     country = models.CharField(max_length=100)
-    remarks = models.CharField(max_length=200)
+    remarks = models.CharField(max_length=200, default="")
     zipCode = models.CharField(max_length=10)
     shipment_method = models.CharField(max_length=50)
     order_status = models.CharField(max_length=20)

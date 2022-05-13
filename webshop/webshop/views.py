@@ -66,6 +66,9 @@ class ItemView(APIView):
     def get(self, request, *args, **kwargs):
         category_id = request.query_params.get('category_id')
         item_id = request.query_params.get('item_id')
+        recent = request.query_params.get('recent')
+        if(recent):
+            qs = Item.objects.all()
         if item_id is not None:
             qs = Item.objects.filter(id=item_id)
             item = qs.first()
@@ -108,6 +111,10 @@ class OrderView(APIView):
             serializer = OrderSerializer(item)
             order_items_serializer = OrderItemSerializer(
                 qs_order_items, many=True)
+            total = 0
+            for item in order_items_serializer.data:
+                total += item['item']['price'] * item['quantity']
+            return Response({"order": serializer.data, "items": order_items_serializer.data, "total": total})
             data = {
                 'order': serializer.data,
                 'order_items': order_items_serializer.data
