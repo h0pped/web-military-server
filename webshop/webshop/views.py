@@ -149,6 +149,11 @@ class OrderView(APIView):
             for item in request.data['items']:
                 item['order'] = order.id
                 itemSerializer = OrderItemSerializer(data=item)
+                # update item quantity
+                item_id = item['item']
+                item_qs = Item.objects.filter(id=item_id).first()
+                item_qs.quantity -= 1
+                item_qs.save()
                 if itemSerializer.is_valid():
                     itemSerializer.save()
                     print(f'{item["item"]} was saved')
