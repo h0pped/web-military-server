@@ -40,7 +40,6 @@ class UserView(APIView):
                     return Response({"msg": "Succesfully authenticated!", "id": user.id}, status=200)
                 else:
                     return Response({"error": "No user with such credentials"}, status=404)
-
             # else:
             #     qs = User.objects.filter(
             #         email=user_email, password=user_password).first
@@ -54,12 +53,58 @@ class UserView(APIView):
             return Response(serializer.data, status=201)
         return Response(serializer.errors)
 
+    def delete(self, request, *args, **kwargs):
+        user_id = request.query_params.get('user_id')
+        qs = User.objects.filter(id=user_id)
+        if not qs.exists():
+            return Response({"error": "No user with such id"}, status=404)
+        qs.delete()
+        return Response({"msg": "User with id {} deleted".format(user_id)}, status=200)
+
 
 class CategoryView(APIView):
     def get(self, request, *args, **kwargs):
-        qs = Category.objects.all()
-        serializer = CategorySerializer(qs, many=True)
-        return Response(serializer.data)
+        category_id = request.query_params.get('category_id')
+        if category_id is None:
+            qs = Category.objects.all()
+            serializer = CategorySerializer(qs, many=True)
+            return Response(serializer.data)
+        else:
+            qs = Category.objects.filter(id=category_id)
+            if qs.exists():
+                serializer = CategorySerializer(qs.first())
+                return Response(serializer.data)
+            else:
+                return Response({"error": "No category with such id"}, status=404)
+
+    def patch(self, request, *args, **kwargs):
+        category_id = request.query_params.get('category_id')
+        category_title = request.data['category_title']
+        if category_id is None:
+            return Response({"error": "No category id in request"}, status=400)
+        if category_title is None:
+            return Response({"error": "No category title in request"}, status=400)
+        qs = Category.objects.filter(id=category_id)
+        if qs.exists():
+            qs.update(title=category_title)
+            return Response({"msg": "Category with id {} updated".format(category_id)}, status=200)
+        else:
+            return Response({"error": "No category with such id"}, status=404)
+
+    def post(self, request, *args, **kwargs):
+        serializer = CategorySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors)
+
+    def delete(self, request, *args, **kwargs):
+        category_id = request.query_params.get('category_id')
+        qs = Category.objects.filter(id=category_id)
+        if not qs.exists():
+            return Response({"error": "No category with such id"}, status=404)
+        qs.delete()
+        return Response({"msg": "Category with id {} deleted".format(category_id)}, status=200)
 
 
 class ItemView(APIView):
@@ -162,6 +207,14 @@ class OrderView(APIView):
             return Response(request.data['order'], status=201)
         print(orderSerializer.errors)
         return Response(request.data['order'], status=500)
+
+    def patch(self, request, *args, **kwargs):
+        order_id = request.query_params.get('order_id')
+        order = Order.objects.filter(id=order_id).first()
+        order.order_status = request.data['status']
+        print(request.data['status'])
+        order.save()
+        return Response("OK", status=200)
 
 
 class ReviewView(APIView):
