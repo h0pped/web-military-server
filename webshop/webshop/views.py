@@ -37,7 +37,7 @@ class UserView(APIView):
                 user = qs.first()
                 if user is not None:
                     serializer = UserSerializer(user)
-                    return Response({"msg": "Succesfully authenticated!", "id": user.id}, status=200)
+                    return Response({"msg": "Succesfully authenticated!", "id": user.id, "role": user.role}, status=200)
                 else:
                     return Response({"error": "No user with such credentials"}, status=404)
             # else:
@@ -131,11 +131,37 @@ class ItemView(APIView):
         return Response(serializer.data)
 
     def post(self, request, *args, **kwargs):
+        print(request.data)
         serializer = ItemSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
+        else:
+            print(serializer.errors)
         return Response(serializer.errors)
+
+    def patch(self, request, *args, **kwargs):
+        # change item quantity that is taken from request body
+        item_id = request.query_params.get('item_id')
+        item_quantity = request.data['quantity']
+        if item_id is None:
+            return Response({"error": "No item id in request"}, status=400)
+        if item_quantity is None:
+            return Response({"error": "No quantity in request"}, status=400)
+        qs = Item.objects.filter(id=item_id)
+        if qs.exists():
+            qs.update(quantity=item_quantity)
+            return Response({"msg": "Item with id {} updated".format(item_id)}, status=200)
+        else:
+            return Response({"error": "No item with such id"}, status=404)
+
+    def delete(self, request, *args, **kwargs):
+        item_id = request.query_params.get('item_id')
+        qs = Item.objects.filter(id=item_id)
+        if not qs.exists():
+            return Response({"error": "No item with such id"}, status=404)
+        qs.delete()
+        return Response({"msg": "Item with id {} deleted".format(item_id)}, status=200)
 
 
 class OrderItemView(APIView):

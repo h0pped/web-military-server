@@ -10,7 +10,7 @@ class User(models.Model):
     email = models.EmailField(unique=True)
     gender = models.CharField(max_length=1)
     password = models.CharField(max_length=30)
-    role = models.CharField(max_length=1)
+    role = models.CharField(max_length=1, default="d")
     # age = models.DateField()
 
     def __str__(self) -> str:
