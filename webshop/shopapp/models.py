@@ -31,6 +31,7 @@ class Item(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     avg_rating = models.FloatField(default=0)
     quantity = models.IntegerField(default=0)
+    visible = models.BooleanField(default=True)
 
     def __getitem__(self, key):
         return getattr(self, key)

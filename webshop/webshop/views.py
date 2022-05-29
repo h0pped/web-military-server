@@ -143,7 +143,24 @@ class ItemView(APIView):
     def patch(self, request, *args, **kwargs):
         # change item quantity that is taken from request body
         item_id = request.query_params.get('item_id')
-        item_quantity = request.data['quantity']
+        item_quantity = 0
+
+        if('quantity' in request.data):
+            item_quantity = request.data['quantity']
+
+        # get change_visibility from params
+        is_change_visibility = request.query_params.get('change_visibility')
+        if is_change_visibility is not None:
+            if is_change_visibility == 'true':
+                # get item from db and change its visibility statut
+                qs = Item.objects.filter(id=item_id)
+                if qs.exists():
+                    item = qs.first()
+                    item.visible = not item.visible
+                    item.save()
+                    return Response({"msg": "Item with id {} visibility changed".format(item_id)}, status=200)
+                else:
+                    return Response({"error": "No such item"}, status=404)
         if item_id is None:
             return Response({"error": "No item id in request"}, status=400)
         if item_quantity is None:
