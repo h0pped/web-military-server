@@ -286,3 +286,22 @@ class ReviewView(APIView):
             item.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors)
+
+    def patch(self, request, *args, **kwargs):
+        print(request.data)
+        review_id = request.query_params.get('review_id')
+        review = Review.objects.filter(id=review_id).first()
+        review.rating = request.data['rating']
+        review.comment = request.data['comment']
+        review.save()
+        # update item avg rating
+        item = Item.objects.filter(id=request.data['item']['id']).first()
+        item_reviews = Review.objects.filter(item=item.id)
+        item_reviews_serializer = ReviewSerializer(item_reviews, many=True)
+        rating_sum = 0
+        for review in item_reviews_serializer.data:
+            rating_sum += review['rating']
+        avg_rating = rating_sum / len(item_reviews_serializer.data)
+        item.__setattr__('avg_rating', avg_rating)
+        item.save()
+        return Response("OK", status=200)
